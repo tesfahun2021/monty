@@ -1,60 +1,49 @@
-#define _GNU_SOURCE
 #include "monty.h"
-#include "global.h"
-char *line;
+
+char *flag = "stack";
 
 /**
- *main - start point of interpretor
- *@ac: command line argument counter
- *@av:command line argument strings
+ * main - main function to run monty
+ * @ac: number of arguments
+ * @av: list of arguments as strings
  *
- *Return: always 0
+ * Return: 0
  */
 int main(int ac, char **av)
 {
-	stack_t *stack = NULL;
-	int i = 0, j = 0;
-	FILE *file;
-	unsigned int line_number = 0;
-	char *opcode;
-	ssize_t chars_read = 0;
-	size_t size;
+	stack_t *h;
+	unsigned int line_number;
+	ssize_t status;
+	char *line;
+	size_t length;
+	FILE *fp;
 
 	if (ac != 2)
 	{
-		printf("USAGE: monty file\n");
+		printf("USAGE: %s file\n", av[0]);
 		exit(EXIT_FAILURE);
 	}
-	file = fopen(av[1], "r");
-	if (file == NULL)
+	h = NULL;
+	fp = fopen(av[1], "r");
+	if (fp == NULL)
 	{
 		printf("Error: Can't open file %s\n", av[1]);
 		exit(EXIT_FAILURE);
 	}
-	while (chars_read != -1)
-	{
+	line_number = 0;
+	do {
+		++line_number;
 		line = NULL;
-		size = 0;
-		i = 0;
-		j = 0;
-		chars_read = getline(&line, &size, file);
-		line_number++;
-		while (line[j] == ' ')
-			j++;
-		if (line[j] == '\n' || line[j] == '#')
-			continue;
-		while (line[i] != '\n' && line[i] != '\0')
-			i++;
-		line[i] = '\0';
-		if (line[0] == '\0')
-			break;
-		opcode = getopcode();
-		opcodecompare(&stack, line_number, opcode);
-		free(opcode);
-		free(line);
-	}
-	fclose(file);
-	free(line);
-	free_stack(stack);
+		length = 0;
+		status = getline(&line, &length, fp);
+		if (status > 0)
+			execute(&h, line, line_number);
+		else
+			free(line);
+	} while (status >= 0);
+
+	fclose(fp);
+	free_stack(h);
+
 	return (0);
 }
